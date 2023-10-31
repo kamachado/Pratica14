@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Estoque</title>
+</head>
+<body>
+<h1>Gerenciador de Estoque</h1>
+
+<h2>Adicionar Produto</h2>
+<label for="produto">Nome do Produto:</label>
+<input type="text" id="produto" placeholder="Nome do produto">
+<label for="quantidade">Quantidade:</label>
+<input type="number" id="quantidade" placeholder="Quantidade">
+<button id="adicionar">Adicionar Produto</button>
+
+<h2>Lista de Produtos</h2>
+<ul id="lista-produtos"></ul>
+
+<script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-database.js"></script>
+<script>
+    const firebaseConfig ={
+        apiKey: "AIzaSyDHzuuZsqC28OJgTPtXcpsOl7zy7fF1pp4",
+        authDomain: "pratica14-f8b8e.firebaseapp.com",
+        projectId: "pratica14-f8b8e",
+        storageBucket: "pratica14-f8b8e.appspot.com",
+        messagingSenderId: "277923366734",
+        appId: "1:277923366734:web:299f1d990689075a12001f",
+        measurementId: "G-73N2HKPW7S"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    const produtosRef = database.ref('produtos');
+
+    document.getElementById('adicionar').addEventListener('click', () => {
+        const nomeProduto = document.getElementById('produto').value;
+        const quantidade = parseInt(document.getElementById('quantidade').value);
+
+        if (nomeProduto && quantidade) {
+            const novoProduto = produtosRef.push();
+            novoProduto.set({
+                nome: nomeProduto,
+                quantidade: quantidade
+            });
+
+            document.getElementById('produto').value = '';
+            document.getElementById('quantidade').value = '';
+        }
+    });
+
+    const listaProdutos = document.getElementById('lista-produtos');
+
+    produtosRef.on('value', (snapshot) => {
+        listaProdutos.innerHTML = '';
+        snapshot.forEach((produtoSnapshot) => {
+            const produto = produtoSnapshot.val();
+            const itemLista = document.createElement('li');
+            itemLista.textContent = `${produto.nome}: ${produto.quantidade} unidades`;
+
+            // Adicionar botões para editar e excluir
+            const editarBotao = document.createElement('button');
+            editarBotao.textContent = 'Editar';
+            editarBotao.addEventListener('click', () => {
+                // Implemente a lógica de edição aqui
+                const novoNome = prompt('Novo nome do produto:', produto.nome);
+                if (novoNome !== null) {
+                    produtoSnapshot.ref.update({ nome: novoNome });
+                }
+            });
+
+            const excluirBotao = document.createElement('button');
+            excluirBotao.textContent = 'Excluir';
+            excluirBotao.addEventListener('click', () => {
+                // Implemente a lógica de exclusão aqui
+                const confirmar = confirm('Tem certeza de que deseja excluir este produto?');
+                if (confirmar) {
+                    produtoSnapshot.ref.remove();
+                }
+            });
+
+            itemLista.appendChild(editarBotao);
+            itemLista.appendChild(excluirBotao);
+
+            listaProdutos.appendChild(itemLista);
+        });
+    });
+</script>
+</body>
+</html>
